@@ -4,6 +4,14 @@ Library for connecting the Ti ADS1248 and ADS1256 24bit ADC to the Arduino Uno
 ##Example
 The ADS12xx-Library.ino provides an example on how to implement and test the ads hardware.
 
+## Schematic
+![Arduino Uno Schematic](https://raw.githubusercontent.com/jur/ADS12xx-Library/master/schematic/ADS1248Shield.png)
+The schematic shows an example how to connect ADS1248 and a 2 wire PT1000 to an
+arduino uno. To test it, you can upload the ADS12xx-Library.ino after building
+and connect via serial monitor. You enter the test mode with "t" and select
+voltage measurement "4". It prints a value which represents the measured
+voltage and is related to the temparatur.
+
 
 ## License 
 The MIT License (MIT)
