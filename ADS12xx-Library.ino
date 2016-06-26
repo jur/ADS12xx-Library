@@ -1,9 +1,10 @@
 #include <SPI.h>
 #include "ads12xx.h"
 
-int  START = 26;
-int  CS = 21;
-int  DRDY = 24;
+/* Arduino UNO */
+int  START = 8;
+int  CS = 9;
+int  DRDY = 3;
 
 //Define which ADC to use in the ads12xx.h file
 
@@ -11,13 +12,11 @@ ads12xx ADS;
 
 void setup()
 {
-	Serial.begin(115200);
+	Serial.begin(9600);
 	while (!Serial) {
 		
 	}
 	Serial.println("Serial online");
-	pinMode(20, OUTPUT);
-	digitalWrite(20, HIGH); //Force other Chip into CS high
 	ADS.begin(CS, START, DRDY);  //initialize ADS as object of the ads12xx class
 
 	ADS.Reset();
@@ -303,11 +302,11 @@ Example for a 4-wire measurement (ex PT100 probe)
 See ADS1248 application sheet for the setup
 */
 void test_Voltage() {
-	ADS.SetRegisterValue(MUX0, MUX_SN2_AIN4 | MUX_SP2_AIN5);
+	ADS.SetRegisterValue(MUX0, MUX_SN2_AIN0 | MUX_SP2_AIN1);
 	ADS.SetRegisterValue(MUX1, REFSELT1_REF1 | VREFCON1_ON);	  //ADS Reference on REF1, Internal Reference on
-	ADS.SetRegisterValue(IDAC0, IMAG2_1500);			 //	IDAC at 1,5mA current
-	ADS.SetRegisterValue(IDAC1, I1DIR_AIN1);			 // IDAC Currentsink on AIN1
-	ADS.SetRegisterValue(SYS0, PGA2_8 | DOR3_320);
+	ADS.SetRegisterValue(IDAC0, IMAG2_1000);      // IDAC at 1,5mA current
+	ADS.SetRegisterValue(IDAC1, I1DIR_AIN0 | I2DIR_AIN1);
+	ADS.SetRegisterValue(SYS0, PGA2_0 | DOR3_10);
 
 	unsigned long volt_val = ADS.GetConversion();
 	Serial.println(volt_val, DEC);

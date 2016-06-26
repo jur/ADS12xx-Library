@@ -1,5 +1,5 @@
 # ADS12xx-Library
-Library for connecting the Ti ADS1248 and ADS1256 24bit ADC to the Teensy 3.1
+Library for connecting the Ti ADS1248 and ADS1256 24bit ADC to the Arduino Uno
 
 ##Example
 The ADS12xx-Library.ino provides an example on how to implement and test the ads hardware.
