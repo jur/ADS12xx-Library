@@ -2,9 +2,17 @@
 #include "ads12xx.h"
 
 /* Arduino UNO */
+#if 1
+/* Pin configuration: */
 int  START = 8;
 int  CS = 9;
 int  DRDY = 3;
+#else
+/* Use free pins when LCD shield is used. */
+int  START = A1;
+int  CS = A2;
+int  DRDY = 2;
+#endif
 
 //Define which ADC to use in the ads12xx.h file
 
@@ -297,25 +305,73 @@ void test_extrefVoltage() {
 
 }
 
+double convertR2T(double R)
+{
+  double T;
+  double R0;
+  double A =  3.9083e-3;
+  double B = -5.775e-7; 
+  double C = -4.183e-12;
+
+  /* Auto detect RTD type */
+  R0 = 100; /* PT100 */
+  if (R > 500) {
+    R0 = 1000; /* PT1000 */
+  }
+
+  T = -R0*A+sqrt(((R0*A)*(R0*A))-4*R0*B*(R0-R));
+  T = T / (2*R0*B);
+  
+  return T;
+}
+
+double convertU2R(double U, double I)
+{
+  double R = U / I;
+
+  return R;
+}
+
+double convertConversion2U(double conversion, double I, double Rref)
+{
+  double Uref = 2 * Rref * I;
+  double pga = 1;
+  double U;
+  
+  U = ((conversion * Uref) / pga) / 8388607.0;
+
+  return U;
+}
+
 /*
-Example for a 4-wire measurement (ex PT100 probe)
-See ADS1248 application sheet for the setup
+Example for a 2-wire measurement (PT100 or PT1000 probe)
+See README.md for setup
 */
 void test_Voltage() {
+  double I = 0.001; /* IDAC 1mA */
+  double Rref = 1100; /* 1.1kOhm percision resistor */
+  
 	ADS.SetRegisterValue(MUX0, MUX_SN2_AIN0 | MUX_SP2_AIN1);
 	ADS.SetRegisterValue(MUX1, REFSELT1_REF1 | VREFCON1_ON);	  //ADS Reference on REF1, Internal Reference on
-	ADS.SetRegisterValue(IDAC0, IMAG2_1000);      // IDAC at 1,5mA current
+	ADS.SetRegisterValue(IDAC0, IMAG2_1000);      // IDAC at 1mA current
 	ADS.SetRegisterValue(IDAC1, I1DIR_AIN0 | I2DIR_AIN1);
 	ADS.SetRegisterValue(SYS0, PGA2_0 | DOR3_10);
 
-	unsigned long volt_val = ADS.GetConversion();
-	Serial.println(volt_val, DEC);
+	unsigned long conversion = ADS.GetConversion();
+	Serial.println(conversion, DEC);
 
-	double voltage = (1.54 / (16777216 / 2))*volt_val;
-	double ohm = voltage / (0.0015 * 8);
-	//Serial.print("Resistance:");
-	//Serial.print(ohm,DEC);
-	//Serial.println("Ohm");
+  double U = convertConversion2U(conversion, I, Rref);
+  Serial.print(U, DEC);
+  Serial.println("V");
+  
+  double R = convertU2R(U, I);	
+	Serial.print("Resistance:");
+	Serial.print(R, DEC);
+	Serial.println("Ohm");
+
+  double T = convertR2T(R);
+  Serial.print(T, DEC);
+  Serial.println("C");
 }
 
 /*
@@ -325,7 +381,7 @@ void test_Thermo() {
 	ADS.SetRegisterValue(MUX0, MUX_SP2_AIN0 | MUX_SN2_AIN1);
 	ADS.SetRegisterValue(MUX1, REFSELT1_ON | VREFCON1_ON);	  //ADS Reference on Intern, Internal Reference on
 	ADS.SetRegisterValue(VBIAS, VBIAS_0);
-	ADS.SetRegisterValue(SYS0, PGA2_128);		   // 2000 sps vollkommen unütz rauschen überwiegt
+	ADS.SetRegisterValue(SYS0, PGA2_128);		   // 2000 sps vollkommen unï¿½tz rauschen ï¿½berwiegt
 
 	long volt_val = ADS.GetConversion();
 	if (long minus = volt_val >> 23 == 1) {
